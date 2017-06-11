@@ -74,7 +74,7 @@ U0 DrawIt(CTask *,CDC *dc)
     lcd->color=BLACK;
     GrRect(lcd,0,8*17,160,8);
     lcd->color=LTRED;
-    GrPrint(lcd,0,8*17,DisplayMsg);
+    GrPrint(lcd,0,8*17,DisplayMsg);
   };
   I64 xpos=0;
   I64 ypos=0;
@@ -460,7 +460,12 @@ U0 renderSprites()
             };
             if (odc->color!=TRANSPARENT)         
             { 
-              GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(8*sp_yf)+memory[0xFE00+oam_ctr]-16+sp_py);
+              if ((memory[0xFE00+oam_ctr+3]>>6)&1)
+              {
+                GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(-8*sp_yf)+8+memory[0xFE00+oam_ctr]-16+sp_py);
+              } else {
+                GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(8*sp_yf)+memory[0xFE00+oam_ctr]-16+sp_py);
+              };
             };
 
             if (tp3)
@@ -471,7 +476,12 @@ U0 renderSprites()
                 if((tp2>>bg_px)&1){odc->color=sp01;}else{odc->color=TRANSPARENT;};             };
               if (odc->color!=TRANSPARENT)         
               { 
-                GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(-8*sp_yf)+8+memory[0xFE00+oam_ctr]-16+sp_py);
+                if ((memory[0xFE00+oam_ctr+3]>>6)&1)
+                {
+                  GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(8*sp_yf)+memory[0xFE00+oam_ctr]-16+sp_py);
+                } else {
+                  GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(-8*sp_yf)+8+memory[0xFE00+oam_ctr]-16+sp_py);
+                };
               }; 
 
             };
@@ -489,3 +499,4 @@ U0 renderSprites()
     };
   };
 };
+
