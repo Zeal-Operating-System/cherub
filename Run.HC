@@ -1,6 +1,6 @@
 CTask *cherub;
 U8 RunCmd[1024];
-U8 RomList[8192];
+U8 RomList[65536];
 
 I64 pos=0;
 CDirEntry *rom_f;
@@ -32,9 +32,9 @@ if (rom_i>-1)
   };
   StrPrint(RunCmd,"Cd(\"%s\");\n#include \"Load\";\nRun(\"%s\");\n",DirCur,rom_f->full_name);
   cherub=User(RunCmd);
-  Sleep(100);
+  Sleep(300);
   WinFocus(Fs);
-  Sleep(100);
+  Sleep(300);
   WinFocus(cherub);
 };
 

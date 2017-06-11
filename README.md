@@ -11,9 +11,16 @@ Put ROM files in `Roms` folder, and `#include "Run";`
 
 # Controls
 
-D-PAD: Arrow Keys
-B: a
-A: s
-Select: Shift
-Start: Enter
-Exit: Esc
+D-PAD: `ARROW KEYS`
+
+B: `A`
+
+A: `S`
+
+Select: `SHIFT`
+
+Start: `ENTER`
+
+Exit: `ESC`
+
+Keys `1-3` toggle 1x/2x/3x video scaling.

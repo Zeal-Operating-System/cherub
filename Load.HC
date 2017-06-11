@@ -10,6 +10,8 @@ I64 obp03,obp02,obp01,obp00;
 I64 obp13,obp12,obp11,obp10;
 I64 jp_state[8];
 
+I64 LCDScale=1;
+
 U0 SetPal(U8 p, I64 *c0, I64 *c1, I64 *c2, I64 *c3)
 {
   I64 col[4];
@@ -565,7 +567,7 @@ U0 memoryWrite(I64 address, I64 data)
             } else {
                 //MBC1WriteType
                 //MBC1 mode setting:
-                MBC1Mode = ((data & 0x1) == 0x1);
+                MBC1Mode = ((data & 0x1) == 0x1);
             }
         } else if (cMBC2) {
             if (address < 0x1000) {
@@ -984,6 +986,27 @@ U0 executeIteration()
         //Keyboard
         
         switch(sc) {
+            case 0x02 + 0x80:
+                LCDScale=1;
+                Fs->win_left   =0x1F; 
+                Fs->win_right  =0x32;
+                Fs->win_top    =0x15; 
+                Fs->win_bottom =0x26;
+                break;
+            case 0x03 + 0x80:
+                LCDScale=2;
+                Fs->win_left   =0x15; 
+                Fs->win_right  =0x3C;
+                Fs->win_top    =0x0D; 
+                Fs->win_bottom =0x30;
+                break;
+            case 0x04 + 0x80:
+                LCDScale=3;
+                Fs->win_left   =0x0A; 
+                Fs->win_right  =0x45;
+                Fs->win_top    =0x03; 
+                Fs->win_bottom =0x38;
+                break;
             case 0x4D:
                 joyPadState(0,TRUE);
                 joyPadState(1,FALSE);
@@ -1115,7 +1138,7 @@ U0 setupRAMBanks()
     numRAMBanks = 1;
   }
 };
-
+
 U0 start()
 {
     for (keyCtr=0;keyCtr<8;keyCtr++) {
@@ -1124,10 +1147,10 @@ U0 start()
     SettingsPush;
     DocClear;
     DCFill(lcd,15);
-    Fs->win_left   =0x24; 
-    Fs->win_right  =0x37;
-    Fs->win_top    =0x10; 
-    Fs->win_bottom =0x21;
+    Fs->win_left   =0x1F; 
+    Fs->win_right  =0x32;
+    Fs->win_top    =0x15; 
+    Fs->win_bottom =0x26;
     stopEmulator=1;
     initEmulator;
     frameskipAmount = 0; //Reset the frame skip setting.

@@ -1,6 +1,9 @@
 // Device contexts
 CDC *fb=DCNew(160,144);
 CDC *lcd=DCNew(160,144);
+CDC *lcd2=DCNew(160*2,144*2);
+CDC *lcd3=DCNew(160*3,144*3);
+
 CDC *bgr=DCNew(160,144);
 CDC *bg_s=DCNew(256,1);
 CDC *sp0_s=DCNew(256,1);
@@ -52,17 +55,56 @@ U0 FreeLCD()
 {
   DCDel(fb);
   DCDel(lcd);
+  DCDel(lcd2);
+  DCDel(lcd3);
   DCDel(bgr);
   DCDel(bg_s);
   DCDel(sp0_s);
+  DCDel(win_s);
   DCDel(win);
   DCDel(sp0);
   DCDel(sp1);
+  odc=NULL;
 }
 
 U0 DrawIt(CTask *,CDC *dc)
 {
-  GrBlot(dc,0,0,lcd);
+  I64 xpos=0;
+  I64 ypos=0;
+  I64 xctr=0;
+  I64 yctr=0;
+  
+  if(LCDScale>1)
+  {
+    while(yctr<144)
+    {
+      xctr=0;
+      xpos=0;
+      while(xctr<160)
+      {
+        if(LCDScale==2){
+          lcd2->color=GrPeek(lcd,xctr,yctr);
+          GrRect(lcd2,xpos,ypos,LCDScale,LCDScale);
+        };
+        if(LCDScale==3){
+          lcd3->color=GrPeek(lcd,xctr,yctr);
+          GrRect(lcd3,xpos,ypos,LCDScale,LCDScale);
+        };
+        xctr++;
+        xpos+=LCDScale;
+      };
+      yctr++;
+      ypos+=LCDScale;
+    };
+    if(LCDScale==2){
+      GrBlot(dc,0,0,lcd2);  
+    };
+    if(LCDScale==3){
+      GrBlot(dc,0,0,lcd3);  
+    };
+  } else{
+    GrBlot(dc,0,0,lcd);
+  };
 }
 
 U0 renderBG_ScanLine()
@@ -297,7 +339,7 @@ U0 renderWIN()
             if((tp0>>win_px)&1){win->color=bgp3;}else{win->color=bgp2;};
           } else {
             if((tp0>>win_px)&1){win->color=bgp1;}else{win->color=bgp0;};
-          };
+          };
           GrPlot(win,win_bx+(7-win_px),win_by+win_py);
           win_px++;
         };
