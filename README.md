@@ -24,3 +24,10 @@ Start: `ENTER`
 Exit: `ESC`
 
 Keys `1-3` toggle 1x/2x/3x video scaling.
+
+Reset: `R`
+
+Load State: `5`
+
+Save State: `7`
+

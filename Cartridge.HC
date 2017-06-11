@@ -52,7 +52,7 @@ U0 initCart() {
             break;
         case 0x10:
             cMBC3 = TRUE;
-            cTIMER = TRUE;
+            cTIMER = TRUE;
             cBATT = TRUE;
             cSRAM = TRUE;
             break;
@@ -109,4 +109,4 @@ U0 initCart() {
             PressAKey;
             break;
     };
-}
+}

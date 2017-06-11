@@ -64,11 +64,18 @@ U0 FreeLCD()
   DCDel(win);
   DCDel(sp0);
   DCDel(sp1);
-  odc=NULL;
+  odc=NULL;
 }
 
 U0 DrawIt(CTask *,CDC *dc)
 {
+  if (DisplayMsgTicks)
+  {
+    lcd->color=BLACK;
+    GrRect(lcd,0,8*17,160,8);
+    lcd->color=LTRED;
+    GrPrint(lcd,0,8*17,DisplayMsg);
+  };
   I64 xpos=0;
   I64 ypos=0;
   I64 xctr=0;

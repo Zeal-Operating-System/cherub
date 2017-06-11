@@ -16,7 +16,7 @@ U0 notifyScanline()
 
     renderBG_ScanLine;
     //renderWIN_ScanLine;
-}
+}
 
 U0 scanLineMode0()
 {
@@ -150,3 +150,4 @@ U0 scanLine(I64 line)
         }
     }
 }
+

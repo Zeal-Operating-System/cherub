@@ -10,7 +10,16 @@ I64 obp03,obp02,obp01,obp00;
 I64 obp13,obp12,obp11,obp10;
 I64 jp_state[8];
 
+I64 kLoad=0;
+I64 kReset=0;
+I64 kSave=0;
+
 I64 LCDScale=1;
+I64 DisplayMsgTicks=0;
+U8 DisplayMsg[32];
+StrCpy(DisplayMsg,"");
+
+U8 StateFile[512];
 
 U0 SetPal(U8 p, I64 *c0, I64 *c1, I64 *c2, I64 *c3)
 {
@@ -567,7 +576,7 @@ U0 memoryWrite(I64 address, I64 data)
             } else {
                 //MBC1WriteType
                 //MBC1 mode setting:
-                MBC1Mode = ((data & 0x1) == 0x1);
+                MBC1Mode = ((data & 0x1) == 0x1);
             }
         } else if (cMBC2) {
             if (address < 0x1000) {
@@ -861,6 +870,99 @@ U0 memoryWrite(I64 address, I64 data)
     }
 }
 
+U0 initEmulator()
+{
+    programCounter = 0x100;
+    stackPointer = 0xFFFE;
+    IME = TRUE;
+    LCDTicks = 15;
+    DIVTicks = 14;
+    registerA = 0x1;
+    registerB = 0;
+    registerC = 0x13;
+    registerD = 0;
+    registerE = 0xD8;
+    FZero = TRUE;
+    FSubtract = FALSE;
+    FHalfCarry = TRUE;
+    FCarry = TRUE;
+    registersHL = 0x014D;
+}
+
+U0 saveState()
+{
+    U8 *statebuf=CAlloc(2048*1024);
+    I64 *cpustate=CAlloc(21*sizeof(I64));
+    U8 *cpubuf=cpustate;
+    U8 *mem=&memory;
+    U8 *mbc=&MBCRam;
+    cpustate[0]=programCounter;
+    cpustate[1]=stackPointer;
+    cpustate[2]=LCDTicks;
+    cpustate[3]=DIVTicks;
+    cpustate[4]=registerA;
+    cpustate[5]=registerB;
+    cpustate[6]=registerC;
+    cpustate[7]=registerD;
+    cpustate[8]=registerE;
+    cpustate[9]=registersHL;
+    cpustate[10]=currMBCRAMBank;
+    cpustate[11]=currMBCRAMBankPosition;
+    cpustate[12]=ROMBank1offs;
+    cpustate[13]=currentROMBank;
+    cpustate[14]=MBC1Mode;
+    cpustate[15]=MBCRAMBanksEnabled;
+    cpustate[16]=IME;
+    cpustate[17]=FZero;
+    cpustate[18]=FSubtract;
+    cpustate[19]=FHalfCarry;
+    cpustate[20]=FCarry;
+    MemCpy(statebuf,cpubuf,(21*sizeof(I64)));
+    MemCpy(statebuf+(21*sizeof(I64)),mem,sizeof(memory));
+    MemCpy(statebuf+(21*sizeof(I64))+sizeof(memory),mbc,sizeof(MBCRam));
+    FileWrite(StateFile,statebuf,(2048*1024));
+    Free(cpustate);
+    Free(statebuf);
+    cpubuf=0;
+}
+
+U0 loadState()
+{
+    I64 toBool;
+    U8 *buf=FileRead(StateFile);
+    MemCpy(&programCounter,buf+(8*0),8);
+    MemCpy(&stackPointer,buf+(8*1),8);
+    MemCpy(&LCDTicks,buf+(8*2),8);
+    MemCpy(&DIVTicks,buf+(8*3),8);
+    MemCpy(&registerA,buf+(8*4),8);
+    MemCpy(&registerB,buf+(8*5),8);
+    MemCpy(&registerC,buf+(8*6),8);
+    MemCpy(&registerD,buf+(8*7),8);
+    MemCpy(&registerE,buf+(8*8),8);
+    MemCpy(&registersHL,buf+(8*9),8);
+    MemCpy(&currMBCRAMBank,buf+(8*10),8);
+    MemCpy(&currMBCRAMBankPosition,buf+(8*11),8);
+    MemCpy(&ROMBank1offs,buf+(8*12),8);
+    MemCpy(&currentROMBank,buf+(8*13),8);
+    MemCpy(&toBool,buf+(8*14),8);
+    MBC1Mode=toBool;
+    MemCpy(&toBool,buf+(8*15),8);
+    MBCRAMBanksEnabled=toBool;
+    MemCpy(&toBool,buf+(8*16),8);
+    IME=toBool;
+    MemCpy(&toBool,buf+(8*17),8);
+    FZero=toBool;
+    MemCpy(&toBool,buf+(8*18),8);
+    FSubtract=toBool;
+    MemCpy(&toBool,buf+(8*19),8);
+    FHalfCarry=toBool;
+    MemCpy(&toBool,buf+(8*20),8);
+    FCarry=toBool;
+    MemCpy(&memory,buf+(21*sizeof(I64)),sizeof(memory));
+    MemCpy(&MBCRam,buf+(21*sizeof(I64))+sizeof(memory),sizeof(MBCRam));
+    Free(buf);
+}
+
 U0 runInterrupt()
 {
     bitShift = 0;
@@ -900,6 +1002,10 @@ U0 updateCore()
     I64 timedTicks = CPUTicks / multiplier;
     // LCD Timing
     LCDTicks += timedTicks; //LCD timing
+    // Display Message Timer
+    if (DisplayMsgTicks>0) { DisplayMsgTicks++; };
+    if (DisplayMsgTicks>1000000) { DisplayMsgTicks=0; };
+
     scanLine(actualScanLine); //Scan Line and STAT Mode Control
     //Audio Timing
     audioTicks += timedTicks; //Not the same as the LCD timing (Cannot be altered by display on/off changes!!!).
@@ -986,6 +1092,48 @@ U0 executeIteration()
         //Keyboard
         
         switch(sc) {
+            case 0x13:
+                kReset=0;
+                break;
+            case 0x13 + 0x80:
+                if(!kReset) {
+                  kReset=1;
+                  StrCpy(DisplayMsg,"Reset");
+                  DisplayMsgTicks=1;
+                  initEmulator;
+                };
+                break;
+
+            case 0x08:
+                kSave=0;
+                break;
+            case 0x08 + 0x80:
+                if(!kSave) {
+                  kSave=1;
+                  StrCpy(DisplayMsg,"State Saved");
+                  DisplayMsgTicks=1;
+                  saveState;
+                };
+                break;
+
+            case 0x06:
+                kLoad=0;
+                break;
+            case 0x06 + 0x80:
+                if(!kLoad) {
+                  kLoad=1;
+                  if (FileFind(StateFile)) {
+                    StrCpy(DisplayMsg,"State Loaded");
+                    DisplayMsgTicks=1;
+                    initEmulator;
+                    loadState;
+                  } else {
+                    StrCpy(DisplayMsg,"No State Found");
+                    DisplayMsgTicks=1;
+                  };
+                };
+                break;
+
             case 0x02 + 0x80:
                 LCDScale=1;
                 Fs->win_left   =0x1F; 
@@ -1100,25 +1248,6 @@ U0 runEmulator()
     }
 }
 
-U0 initEmulator()
-{
-    programCounter = 0x100;
-    stackPointer = 0xFFFE;
-    IME = TRUE;
-    LCDTicks = 15;
-    DIVTicks = 14;
-    registerA = 0x1;
-    registerB = 0;
-    registerC = 0x13;
-    registerD = 0;
-    registerE = 0xD8;
-    FZero = TRUE;
-    FSubtract = FALSE;
-    FHalfCarry = TRUE;
-    FCarry = TRUE;
-    registersHL = 0x014D;
-}
-
 U0 initLCD()
 {
 }
@@ -1163,6 +1292,8 @@ U0 start()
     SetPal(memory[0xFF48],&obp00,&obp01,&obp02,&obp03);
     // OBP1 Palette $$FF49 
     SetPal(memory[0xFF49],&obp10,&obp11,&obp12,&obp13);
+    StrCpy(DisplayMsg,"ROM Loaded");
+    DisplayMsgTicks=1;
     runEmulator; //Start the emulation.
     FreeLCD;
     Free(ROM);
@@ -1175,5 +1306,7 @@ U0 start()
 U0 Run(U8 *rom_file)
 {
     ROM=FileRead(rom_file,&ROMSize);
-    start;
+    StrCpy(StateFile,rom_file);
+    StrCpy(StateFile+StrLen(StateFile)-3,".STA.Z");
+    start;
 }
