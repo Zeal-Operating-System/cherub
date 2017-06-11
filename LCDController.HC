@@ -23,7 +23,7 @@ U0 notifyScanline()
 
     if (windowLeft < 160) {
         ++windowSourceLine;
-    }
+    }
 }
 
 U0 scanLineMode0()
@@ -141,6 +141,7 @@ U0 scanLine(I64 line)
         } else {
             //VBlank Ending (We're on the last actual scan line)
             if (memory[0xFF44] == 153) {
+
                 memory[0xFF44] = 0; //LY register resets to 0 early.
                 matchLYC; //LY==LYC Test is early here (Fixes specific one-line glitches (example: Kirby2 intro)).
             }

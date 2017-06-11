@@ -650,7 +650,7 @@ U0 memoryWrite(I64 address, I64 data)
                 currMBCRAMBank = data & 0x03;
                 currMBCRAMBankPosition = (currMBCRAMBank << 13) - 0xA000;
             } else {
-                //We might have encountered illegal RAM writing or such, so just do nothing...
+                //We might have encountered illegal RAM writing or such, so just do nothing...
             }
         } else {
             //We might have encountered illegal RAM writing or such, so just do nothing...
@@ -661,15 +661,6 @@ U0 memoryWrite(I64 address, I64 data)
         if (modeSTAT < 3) {
             // Bkg Tile data area
             if (address < 0x9800) {
-                //I64 tileIndex = ((address - 0x8000) >> 4);
-                //if (tileReadState[tileIndex] == 1) {
-                //    I64 r = count(tileData) - tileCount + tileIndex;
-                //    do {
-                //        tileData[r] = null;
-                //        r -= tileCount;
-                //    } while (r >= 0);
-                //    tileReadState[tileIndex] = 0;
-                //}
             }
             memory[address] = data;
         }
@@ -912,13 +903,13 @@ U0 updateCore()
     audioTicks += timedTicks; //Not the same as the LCD timing (Cannot be altered by display on/off changes!!!).
     //Are we past the granularity setting?
     if (audioTicks >= audioGranularity) {
+        sc=InU8(0x60);
 
         //Emulator Timing (Timed against audio for optimization):
         emulatorTicks += audioTicks;
         if (emulatorTicks >= machineCyclesPerLoop) {
                 //LCD off takes at least 2 frames.
                 if (drewBlank == 0) {
-                    sc=InU8(0x60);
                     renderSprites; 
                     drawFrameBuffer;
                 };
@@ -1050,7 +1041,7 @@ U0 executeIteration()
         for (keyCtr=0;keyCtr<8;keyCtr++) {
           joyPadEvent(keyCtr,jp_state[keyCtr]);
         };
-        
+
         Sleep(0);
     };
 }

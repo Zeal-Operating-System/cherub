@@ -78,12 +78,18 @@ U0 renderBG_ScanLine()
     I64 bg_tc_row=0;
     I64 bg_tc_ec=0;
     I64 bg_tc_tc=0;
+
+    bg_tc_row=memory[0xFF42]/8;
+    bg_tc_ec=memory[0xFF42]%8;
+
     while (bg_tc_tc<actualScanLine)
     {
       bg_tc_tc++;
       bg_tc_ec++;
       if (bg_tc_ec>7) { bg_tc_ec=0; bg_tc_row++; };
     };
+
+    if (bg_tc_row>31) { bg_tc_row-=32; };
 
     bg_tctr=(32*bg_tc_row);
     bg_bx=0;
@@ -154,34 +160,18 @@ U0 renderBG_ScanLine()
     };
   };
 
-    GrBlot(bgr,-memory[0xFF43],-memory[0xFF42]+actualScanLine,bg_s);
-    if (memory[0xFF42])
-    {
-      GrBlot(bgr,memory[0xFF43],memory[0xFF42]+256+actualScanLine,bg_s);
-    };
+    GrBlot(bgr,-memory[0xFF43],actualScanLine,bg_s);
     if (memory[0xFF43])
     {
-      GrBlot(bgr,-memory[0xFF43]+256,-memory[0xFF42]+actualScanLine,bg_s);
-    };
-    if (memory[0xFF42] && memory[0xFF43])
-    {
-      GrBlot(bgr,-memory[0xFF43]+256,-memory[0xFF42]+256+actualScanLine,bg_s);
+      GrBlot(bgr,-memory[0xFF43]+256,actualScanLine,bg_s);
     };
 
     if (sp0_e)
     {
-     GrBlot(sp0,-memory[0xFF43],-memory[0xFF42]+actualScanLine,sp0_s);
-     if (memory[0xFF42])
-     {
-       GrBlot(sp0,memory[0xFF43],memory[0xFF42]+256+actualScanLine,sp0_s);
-     };
+     GrBlot(sp0,-memory[0xFF43],actualScanLine,sp0_s);
      if (memory[0xFF43])
      {
-       GrBlot(sp0,-memory[0xFF43]+256,-memory[0xFF42]+actualScanLine,sp0_s);
-     };
-     if (memory[0xFF42] && memory[0xFF43])
-     { 
-       GrBlot(sp0,-memory[0xFF43]+256,-memory[0xFF42]+256+actualScanLine,sp0_s);
+       GrBlot(sp0,-memory[0xFF43]+256,actualScanLine,sp0_s);
      };
     };
 
@@ -260,7 +250,7 @@ U0 renderSprites()
             tp3=0;
           };
 
-          if ((memory[0xFE00+oam_ctr+3]>>7)&1==0)
+          if ((memory[0xFE00+oam_ctr+3]>>7)&1==0)
           {
             odc=sp1;
           } else {
@@ -287,7 +277,7 @@ U0 renderSprites()
                 if((tp2>>bg_px)&1){odc->color=sp01;}else{odc->color=TRANSPARENT;};             };
               if (odc->color!=TRANSPARENT)         
               { 
-                GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(-8*sp_yf)+8+memory[0xFE00+oam_ctr]-16+sp_py);
+                GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(-8*sp_yf)+8+memory[0xFE00+oam_ctr]-16+sp_py);
               }; 
 
             };
