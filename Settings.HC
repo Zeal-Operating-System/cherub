@@ -2,7 +2,7 @@ I64 audioGranularity = 20;
 
 //Auto Frame Skip
 I64 autoFrameskip = TRUE;
-
+
 //Colorize GB mode? **No CGB support**
 I64 colorize = FALSE;
 

@@ -13,18 +13,10 @@ U0 matchLYC()
 }
 U0 notifyScanline()
 {
-    if (actualScanLine == 0) {
-        windowSourceLine = 0;
-    }
-    // determine the left edge of the window (160 if window is inactive) **not implemented yet**
-    I64 windowLeft = t((gfxWindowDisplay && memory[0xFF4A] <= actualScanLine),ToI64(Min(160, memory[0xFF4B] - 7)),160);
 
     renderBG_ScanLine;
-
-    if (windowLeft < 160) {
-        ++windowSourceLine;
-    }
-}
+    //renderWIN_ScanLine;
+}
 
 U0 scanLineMode0()
 {

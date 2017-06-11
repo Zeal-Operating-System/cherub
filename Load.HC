@@ -119,7 +119,7 @@ mc_ctr = 0xFF00;
 while(mc_ctr<0xFFFF) { memory[mc_ctr]=0; mc_ctr++; };
 
 //Switchable RAM (Used by games for more RAM) for the main memory range 0xA000 - 0xC000.
-I64 MBCRam[0x10000];
+I64 MBCRam[0x20000];
 //MBC1 Type (4/32, 16/8)
 Bool MBC1Mode = FALSE;
 //MBC RAM Access Control.
@@ -234,7 +234,7 @@ Bool spritePriorityEnabled = TRUE;
 I64 tileReadState[tileCount];
 for(arrayCtr=0;arrayCtr<tileCount;arrayCtr++) { tileReadState[arrayCtr]=0;};
 
-I64 windowSourceLine = 0;
+//I64 windowSourceLine = 0;
 //"Classic" GameBoy palette colors.
 I64 colors[4] = {0x80EFFFDE, 0x80ADD794, 0x80529273, 0x80183442};
 //Frame skip tracker
@@ -903,13 +903,15 @@ U0 updateCore()
     audioTicks += timedTicks; //Not the same as the LCD timing (Cannot be altered by display on/off changes!!!).
     //Are we past the granularity setting?
     if (audioTicks >= audioGranularity) {
-        sc=InU8(0x60);
 
         //Emulator Timing (Timed against audio for optimization):
         emulatorTicks += audioTicks;
         if (emulatorTicks >= machineCyclesPerLoop) {
+        sc=InU8(0x60);
+
                 //LCD off takes at least 2 frames.
                 if (drewBlank == 0) {
+                    renderWIN;
                     renderSprites; 
                     drawFrameBuffer;
                 };
@@ -1101,6 +1103,19 @@ U0 initLCD()
 
 #include "Cartridge";
 
+U0 setupRAMBanks()
+{
+  if (cMBC2) {
+    numRAMBanks = 1 / 16;
+  } else if (cMBC1 || cRUMBLE || cMBC3 || cHuC3) {
+    numRAMBanks = 4;
+  } else if (cMBC5) {
+    numRAMBanks = 16;
+  } else if (cSRAM) {
+    numRAMBanks = 1;
+  }
+};
+
 U0 start()
 {
     for (keyCtr=0;keyCtr<8;keyCtr++) {
@@ -1117,6 +1132,7 @@ U0 start()
     initEmulator;
     frameskipAmount = 0; //Reset the frame skip setting.
     initCart; // init cartridge bank type
+    setupRAMBanks;
     initLCD; // init LCD
     // BG Palette $$FF47 
     SetPal(memory[0xFF47],&bgp0,&bgp1,&bgp2,&bgp3);
