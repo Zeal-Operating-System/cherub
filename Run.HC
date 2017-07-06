@@ -1,6 +1,6 @@
 CTask *cherub;
-U8 RunCmd[1024];
-U8 RomList[65536];
+U8 *RunCmd=CAlloc(1024);
+U8 *RomList=CAlloc(65536);
 
 I64 pos=0;
 CDirEntry *rom_f;
@@ -25,7 +25,7 @@ rom_f=roms;
 
 if (rom_i>-1)
 {
-  while (incr<rom_i)
+  while (incr<rom_i)
   {
     rom_f=rom_f->next;
     incr++;
@@ -39,5 +39,8 @@ if (rom_i>-1)
 };
 
 DirEntryDel(roms);
+Free(RomList);
+Free(RunCmd);
 rom_f=NULL;
 
+

@@ -371,14 +371,17 @@ U0 drawFrameBuffer()
 {
 
   // if sprites enabled, draw SP0 to framebuffer
-  if (memory[0xFF40]>>1&1){ GrBlot(fb,0,0,sp0); };
+
+  GrBlot(fb,0,0,sp0);
+  // if (memory[0xFF40]>>1&1){ GrBlot(fb,0,0,sp0); };
   // if bg enabled, draw BG rasterized to framebuffer
   if (memory[0xFF40]>>0&1){ GrBlot(fb,0,0,bgr); };  
   // if sprites enabled, draw SP1 to framebuffer
   if (memory[0xFF40]>>5&1){ GrBlot(fb,memory[0xFF4B]-7,memory[0xFF4A],win); };  
   // if sprites enabled, draw WIN to framebuffer
 
-  if (memory[0xFF40]>>1&1){ GrBlot(fb,0,0,sp1); };
+  GrBlot(fb,0,0,sp1);
+  //if (memory[0xFF40]>>1&1){ GrBlot(fb,0,0,sp1); };
 
   // if LCD enabled, draw framebuffer to LCD
   if ((memory[0xFF40]>>7)&1){
@@ -402,7 +405,8 @@ U0 renderSprites()
   s_tile=0;
 
   // Draw Sprites from OAM
-  if (memory[0xFF40]>>1&1)
+  if (TRUE)
+  //if (memory[0xFF40]>>1&1)
   {
     oam_ctr=156;
     while(oam_ctr>-4)
@@ -460,7 +464,7 @@ U0 renderSprites()
             };
             if (odc->color!=TRANSPARENT)         
             { 
-              if ((memory[0xFE00+oam_ctr+3]>>6)&1)
+              if ((memory[0xFE00+oam_ctr+3]>>6)&1 && !(memory[0xFF40]>>2&1))
               {
                 GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(-8*sp_yf)+8+memory[0xFE00+oam_ctr]-16+sp_py);
               } else {
@@ -476,7 +480,7 @@ U0 renderSprites()
                 if((tp2>>bg_px)&1){odc->color=sp01;}else{odc->color=TRANSPARENT;};             };
               if (odc->color!=TRANSPARENT)         
               { 
-                if ((memory[0xFE00+oam_ctr+3]>>6)&1)
+                if ((memory[0xFE00+oam_ctr+3]>>6)&1 && !(memory[0xFF40]>>2&1))
                 {
                   GrPlot(odc,memory[0xFE00+oam_ctr+1]-8+(7-sp_px),(8*sp_yf)+memory[0xFE00+oam_ctr]-16+sp_py);
                 } else {
@@ -499,4 +503,3 @@ U0 renderSprites()
     };
   };
 };
-

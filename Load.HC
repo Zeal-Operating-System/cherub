@@ -1308,5 +1308,5 @@ U0 Run(U8 *rom_file)
     ROM=FileRead(rom_file,&ROMSize);
     StrCpy(StateFile,rom_file);
     StrCpy(StateFile+StrLen(StateFile)-3,".STA.Z");
-    start;
+    start;
 }
