@@ -2,6 +2,19 @@ StrCpy(Fs->task_name,"");
 StrCpy(Fs->task_title,"");
 // Settings
 #include "Settings";
+
+#define GP_TX_PORT 0x0378
+#define GP_RX_PORT 0x0379
+
+#define GP_SNES_DELAY 0
+
+#define GP_SNES_POWER 0xFC
+#define GP_SNES_CLOCK 0x01
+#define GP_SNES_LATCH 0x02
+
+U8 gp_data[16];
+I64 gp_ctr;
+
 I64 keyCtr=0;
 I64 sc=0;
 I64 ROMSize=0;
@@ -10,15 +23,17 @@ I64 obp03,obp02,obp01,obp00;
 I64 obp13,obp12,obp11,obp10;
 I64 jp_state[8];
 
+I64 exitApp=0;
+
+I64 tdCtr=0;
 I64 apuCtr=0;
 I64 apuToggle=1;
-I64 kAPUChan1=0;
-I64 kAPUChan2=0;
-I64 kAPUChan3=0;
 
 I64 kLoad=0;
 I64 kReset=0;
 I64 kSave=0;
+I64 kSnd=0;
+I64 soundMode=2;
 
 I64 DisplayMsgTicks=0;
 U8 DisplayMsg[32];
@@ -921,6 +936,9 @@ U0 initEmulator()
     registersHL = 0x014D;
 }
 
+#include "GamePad";
+#include "Keyboard";        
+
 U0 saveState()
 {
     U8 *statebuf=CAlloc(2048*1024);
@@ -1018,6 +1036,9 @@ U0 runInterrupt()
         }
         testbit = 1 << ++bitShift;
     }
+
+    tdCtr=0;
+    while(tdCtr<frameDelay) { tdCtr++; };
 }
 
 // #include "LCD";
@@ -1027,7 +1048,7 @@ U0 updateCore()
     if (apuToggle==1)
     {
       apuCtr++;
-      if(apuCtr>1000)
+      if(apuCtr>2000)
       {
         memory[0xFEED]++;
         if(memory[0xFEED]>1) { memory[0xFEED]=0; };
@@ -1058,7 +1079,15 @@ U0 updateCore()
         //Emulator Timing (Timed against audio for optimization):
         emulatorTicks += audioTicks;
         if (emulatorTicks >= machineCyclesPerLoop) {
-        sc=InU8(0x60);
+        if (useGamePad==TRUE)
+        {
+          updateGamePad;
+        };
+        if (useKeyboard==TRUE)
+        {
+          sc=InU8(0x60);
+          updateKeyboard;
+        };
 
                 //LCD off takes at least 2 frames.
                 if (drewBlank == 0) {
@@ -1105,7 +1134,7 @@ U0 executeIteration()
 
     //Iterate the interpreter loop:
     I64 op = 0;
-    while (sc!=1) {
+    while (exitApp!=1) {
         //Fetch the current opcode.
         op = memoryRead(programCounter);
         if (!skipPCIncrement) {
@@ -1132,156 +1161,71 @@ U0 executeIteration()
         }
         //Timing:
         updateCore;
-        //Keyboard
-        
-        switch(sc) {
 
-            case 0x10:
-                kAPUChan1=0;
-                break;
-            case 0x10 + 0x80:
-                if(!kAPUChan1) {
-                  kAPUChan1=1;
-                  apuToggle=0;
-                  memory[0xFEED]=0;
-                  StrCpy(DisplayMsg,"APU Ch 01");
-                  DisplayMsgTicks=1;
-                };
-                break;
+        if (gp_data[7]==0)          
+        {
+          jp_state[0]=FALSE;
+        }
+        else
+        {
+          jp_state[0]=TRUE;
+        };
+        if (gp_data[6]==0)          
+        {
+          jp_state[1]=FALSE;
+        }
+        else
+        {
+          jp_state[1]=TRUE;
+        };
+        if (gp_data[4]==0)          
+        {
+          jp_state[2]=FALSE;
+        }
+        else
+        {
+          jp_state[2]=TRUE;
+        };
+        if (gp_data[5]==0)          
+        {
+          jp_state[3]=FALSE;
+        }
+        else
+        {
+          jp_state[3]=TRUE;
+        };
 
-            case 0x11:
-                kAPUChan2=0;
-                break;
-            case 0x11 + 0x80:
-                if(!kAPUChan2) {
-                  kAPUChan2=1;
-                  apuToggle=0;
-                  memory[0xFEED]=1;
-                  StrCpy(DisplayMsg,"APU Ch 02");
-                  DisplayMsgTicks=1;
-                };
-                break;
-
-            case 0x12:
-                kAPUChan3=0;
-                break;
-            case 0x12 + 0x80:
-                if(!kAPUChan3) {
-                  kAPUChan3=1;
-                  apuToggle=1;
-                  StrCpy(DisplayMsg,"APU Ch Auto");
-                  DisplayMsgTicks=1;
-                };
-                break;
-
-            case 0x13:
-                kReset=0;
-                break;
-            case 0x13 + 0x80:
-                if(!kReset) {
-                  kReset=1;
-                  StrCpy(DisplayMsg,"Reset");
-                  DisplayMsgTicks=1;
-                  initEmulator;
-                };
-                break;
-
-            case 0x08:
-                kSave=0;
-                break;
-            case 0x08 + 0x80:
-                if(!kSave) {
-                  kSave=1;
-                  StrCpy(DisplayMsg,"State Saved");
-                  DisplayMsgTicks=1;
-                  saveState;
-                };
-                break;
-
-            case 0x06:
-                kLoad=0;
-                break;
-            case 0x06 + 0x80:
-                if(!kLoad) {
-                  kLoad=1;
-                  if (FileFind(StateFile)) {
-                    StrCpy(DisplayMsg,"State Loaded");
-                    DisplayMsgTicks=1;
-                    initEmulator;
-                    loadState;
-                  } else {
-                    StrCpy(DisplayMsg,"No State Found");
-                    DisplayMsgTicks=1;
-                  };
-                };
-                break;
-
-            case 0x02 + 0x80:
-                LCDScale=1;
-                SetLCDScale;
-                break;
-            case 0x03 + 0x80:
-                LCDScale=2;
-                SetLCDScale;
-                break;
-            case 0x04 + 0x80:
-                LCDScale=3;
-                SetLCDScale;
-                break;
-            case 0x4D:
-                joyPadState(0,TRUE);
-                joyPadState(1,FALSE);
-                break;
-            case 0x4B:
-                joyPadState(1,TRUE);
-                joyPadState(0,FALSE);
-                break;
-            case 0x48:
-                joyPadState(2,TRUE);
-                joyPadState(3,FALSE);
-                break;
-            case 0x50:
-                joyPadState(3,TRUE);
-                joyPadState(2,FALSE);
-                break;
-            case 0x1F:
-                joyPadState(4,TRUE);
-                break;
-            case 0x1E:
-                joyPadState(5,TRUE);
-                break;
-            case 0x2A:
-                joyPadState(6,TRUE);
-                break;
-            case 0x1C:
-                joyPadState(7,TRUE);
-                break;
-            case 0x4D + 0x80:
-                joyPadState(0,FALSE);
-                break;
-            case 0x4B + 0x80:
-                joyPadState(1,FALSE);
-                break;
-            case 0x48 + 0x80:
-                joyPadState(2,FALSE);
-                break;
-            case 0x50 + 0x80:
-                joyPadState(3,FALSE);
-                break;
-            case 0x1F + 0x80:
-                joyPadState(4,FALSE);
-                break;
-            case 0x1E + 0x80:
-                joyPadState(5,FALSE);
-                break;
-            case 0x2A + 0x80:
-                joyPadState(6,FALSE);
-                break;
-            case 0x1C + 0x80:
-                joyPadState(7,FALSE);
-                break;
-            default:
-                break;
+        if (gp_data[0]==0)          
+        {
+          jp_state[4]=FALSE;
+        }
+        else
+        {
+          jp_state[4]=TRUE;
+        };
+        if (gp_data[1]==0)          
+        {
+          jp_state[5]=FALSE;
+        }
+        else
+        {
+          jp_state[5]=TRUE;
+        };
+        if (gp_data[2]==0)          
+        {
+          jp_state[6]=FALSE;
+        }
+        else
+        {
+          jp_state[6]=TRUE;
+        };
+        if (gp_data[3]==0)          
+        {
+          jp_state[7]=FALSE;
+        }
+        else
+        {
+          jp_state[7]=TRUE;
         };
 
         for (keyCtr=0;keyCtr<8;keyCtr++) {
@@ -1289,6 +1233,101 @@ U0 executeIteration()
         };
 
         Sleep(0);
+        
+        if (gp_data[10]!=0)
+        {
+          exitApp=1;
+        };
+
+        if (gp_data[11]!=0)
+        {
+          if(!kLoad)
+          {
+            kLoad=1;
+            if (FileFind(StateFile)) {
+              StrCpy(DisplayMsg,"State Loaded");
+              DisplayMsgTicks=1;
+              initEmulator;
+              loadState;
+            } else {
+              StrCpy(DisplayMsg,"No State Found");
+              DisplayMsgTicks=1;
+            };          
+          };
+        }
+        else
+        {
+          kLoad=0;
+        };
+
+        if (gp_data[9]!=0)
+        {
+          if(!kSave) {
+            kSave=1;
+            StrCpy(DisplayMsg,"State Saved");
+            DisplayMsgTicks=1;
+            saveState;
+          };
+        }
+        else
+        {
+          kSave=0;
+        };
+
+        if (gp_data[8]!=0)
+        {
+          if(!kSnd) {
+            kSnd=1;
+            soundMode++;
+            if (soundMode>3)
+            {
+              soundMode=0;
+            };
+
+            if (soundMode==0)
+            {
+              StrCpy(DisplayMsg,"Snd Ch01");
+            };
+            if (soundMode==1)
+            {
+              StrCpy(DisplayMsg,"Snd Ch02");
+            };
+            if (soundMode==2)
+            {
+              StrCpy(DisplayMsg,"Snd Auto");
+            };
+            if (soundMode==3)
+            {
+              StrCpy(DisplayMsg,"Snd Off");
+            };
+
+            DisplayMsgTicks=1;
+          };
+        }
+        else
+        {
+          kSnd=0;
+        };
+
+        if (soundMode==0)
+        {
+          apuToggle=0;
+          memory[0xFEED]=0;
+        };
+        if (soundMode==1)
+        {
+          apuToggle=0;
+          memory[0xFEED]=1;
+        };
+        if (soundMode==2)
+        {
+          apuToggle=1;
+        };
+        if (soundMode==3)
+        {
+          memory[0xFEED]=128;
+          apuToggle=0;
+        };
     };
 }
 
@@ -1348,6 +1387,15 @@ U0 start()
     for (keyCtr=0;keyCtr<8;keyCtr++) {
       jp_state[keyCtr]=0;
     };
+
+    gp_ctr=0;
+    while(gp_ctr<12)
+    {
+      gp_data[gp_ctr]=0;
+      gp_ctr++;
+    };
+    gp_ctr=0;
+
     SettingsPush;
     DocClear;
     DCFill(lcd,15);

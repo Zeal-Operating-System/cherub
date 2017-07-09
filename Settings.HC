@@ -3,12 +3,13 @@ I64 audioGranularity = 20;
 //Auto Frame Skip
 I64 autoFrameskip = TRUE;
 
-//Colorize GB mode? **No CGB support**
-I64 colorize = FALSE;
+I64 frameDelay = 120;
 
-//Keyboard button map. **Not implemented yet**
-//Order: Right, Left, Up, Down, A, B, Select, Start
-I64 keyboardButtonMap[8] = {'d', 'a', 'w', 's', ',', '.', 'n', 'm'};
+// Sound modes: 0 (Ch 01), 1 (Ch 02), 2 (Auto), 3 (Off)
+I64 soundMode=2;
+
+I64 useKeyboard=TRUE;
+I64 useGamePad=TRUE;
 
 I64 LCDScale=3;
 

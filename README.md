@@ -9,7 +9,29 @@ Z80 Core and timing routines ported from [PHP Terminal GameBoy Emulator](https:/
 
 Put ROM files in `Roms` folder, and `#include "Run";`
 
-# Controls
+You can connect a SNES gamepad w/ adapter to the parallel port. Enable gamepad in `Settings.HC` with `useGamePad=TRUE;`
+
+# Gamepad Controls
+
+D-PAD: D-PAD
+
+B: `Y`
+
+A: `B`
+
+Select: `SELECT`
+
+Start: `START`
+
+Exit: `L`
+
+Load State: `R`
+
+Save State: `X`
+
+Toggle Sound: `A`
+
+# Keyboard Controls
 
 D-PAD: `ARROW KEYS`
 
@@ -31,9 +53,5 @@ Load State: `5`
 
 Save State: `7`
 
-Sound Channel 1: `Q`
-
-Sound Channel 2: `W`
-
-Sound Channel Auto Toggle: `E`
+Toggle Sound: `Q`
 
