@@ -10,6 +10,12 @@ I64 obp03,obp02,obp01,obp00;
 I64 obp13,obp12,obp11,obp10;
 I64 jp_state[8];
 
+I64 apuCtr=0;
+I64 apuToggle=1;
+I64 kAPUChan1=0;
+I64 kAPUChan2=0;
+I64 kAPUChan3=0;
+
 I64 kLoad=0;
 I64 kReset=0;
 I64 kSave=0;
@@ -1018,6 +1024,17 @@ U0 runInterrupt()
 
 U0 updateCore()
 {
+    if (apuToggle==1)
+    {
+      apuCtr++;
+      if(apuCtr>1000)
+      {
+        memory[0xFEED]++;
+        if(memory[0xFEED]>1) { memory[0xFEED]=0; };
+        apuCtr=0;
+      };
+    };
+
     // DIV control
     DIVTicks += CPUTicks;
     if (DIVTicks >= 0x40) {
@@ -1118,6 +1135,45 @@ U0 executeIteration()
         //Keyboard
         
         switch(sc) {
+
+            case 0x10:
+                kAPUChan1=0;
+                break;
+            case 0x10 + 0x80:
+                if(!kAPUChan1) {
+                  kAPUChan1=1;
+                  apuToggle=0;
+                  memory[0xFEED]=0;
+                  StrCpy(DisplayMsg,"APU Ch 01");
+                  DisplayMsgTicks=1;
+                };
+                break;
+
+            case 0x11:
+                kAPUChan2=0;
+                break;
+            case 0x11 + 0x80:
+                if(!kAPUChan2) {
+                  kAPUChan2=1;
+                  apuToggle=0;
+                  memory[0xFEED]=1;
+                  StrCpy(DisplayMsg,"APU Ch 02");
+                  DisplayMsgTicks=1;
+                };
+                break;
+
+            case 0x12:
+                kAPUChan3=0;
+                break;
+            case 0x12 + 0x80:
+                if(!kAPUChan3) {
+                  kAPUChan3=1;
+                  apuToggle=1;
+                  StrCpy(DisplayMsg,"APU Ch Auto");
+                  DisplayMsgTicks=1;
+                };
+                break;
+
             case 0x13:
                 kReset=0;
                 break;
@@ -1302,6 +1358,7 @@ U0 start()
     initCart; // init cartridge bank type
     setupRAMBanks;
     initLCD; // init LCD
+    memory[0xFEED]=1;
     CTask *snd_task=Spawn(&GBSoundTask,&memory,,2);
     // BG Palette $$FF47 
     SetPal(memory[0xFF47],&bgp0,&bgp1,&bgp2,&bgp3);

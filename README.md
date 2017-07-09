@@ -31,3 +31,9 @@ Load State: `5`
 
 Save State: `7`
 
+Sound Channel 1: `Q`
+
+Sound Channel 2: `W`
+
+Sound Channel Auto Toggle: `E`
+
