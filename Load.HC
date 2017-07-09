@@ -14,12 +14,38 @@ I64 kLoad=0;
 I64 kReset=0;
 I64 kSave=0;
 
-I64 LCDScale=1;
 I64 DisplayMsgTicks=0;
 U8 DisplayMsg[32];
 StrCpy(DisplayMsg,"");
 
 U8 StateFile[512];
+
+U0 SetLCDScale()
+{
+  switch(LCDScale)
+  {
+    case 1:
+      Fs->win_left   =0x1F; 
+      Fs->win_right  =0x32;
+      Fs->win_top    =0x15; 
+      Fs->win_bottom =0x26;
+      break;
+    case 2:
+      Fs->win_left   =0x15; 
+      Fs->win_right  =0x3C;
+      Fs->win_top    =0x0D; 
+      Fs->win_bottom =0x30;
+      break;
+    case 3:
+      Fs->win_left   =0x0A; 
+      Fs->win_right  =0x45;
+      Fs->win_top    =0x03; 
+      Fs->win_bottom =0x38;
+      break;
+    default:
+      break;
+  };
+}
 
 U0 SetPal(U8 p, I64 *c0, I64 *c1, I64 *c2, I64 *c3)
 {
@@ -1136,24 +1162,15 @@ U0 executeIteration()
 
             case 0x02 + 0x80:
                 LCDScale=1;
-                Fs->win_left   =0x1F; 
-                Fs->win_right  =0x32;
-                Fs->win_top    =0x15; 
-                Fs->win_bottom =0x26;
+                SetLCDScale;
                 break;
             case 0x03 + 0x80:
                 LCDScale=2;
-                Fs->win_left   =0x15; 
-                Fs->win_right  =0x3C;
-                Fs->win_top    =0x0D; 
-                Fs->win_bottom =0x30;
+                SetLCDScale;
                 break;
             case 0x04 + 0x80:
                 LCDScale=3;
-                Fs->win_left   =0x0A; 
-                Fs->win_right  =0x45;
-                Fs->win_top    =0x03; 
-                Fs->win_bottom =0x38;
+                SetLCDScale;
                 break;
             case 0x4D:
                 joyPadState(0,TRUE);
@@ -1268,6 +1285,8 @@ U0 setupRAMBanks()
   }
 };
 
+#include "Sound";
+
 U0 start()
 {
     for (keyCtr=0;keyCtr<8;keyCtr++) {
@@ -1276,16 +1295,14 @@ U0 start()
     SettingsPush;
     DocClear;
     DCFill(lcd,15);
-    Fs->win_left   =0x1F; 
-    Fs->win_right  =0x32;
-    Fs->win_top    =0x15; 
-    Fs->win_bottom =0x26;
+    SetLCDScale;
     stopEmulator=1;
     initEmulator;
     frameskipAmount = 0; //Reset the frame skip setting.
     initCart; // init cartridge bank type
     setupRAMBanks;
     initLCD; // init LCD
+    CTask *snd_task=Spawn(&GBSoundTask,&memory,,2);
     // BG Palette $$FF47 
     SetPal(memory[0xFF47],&bgp0,&bgp1,&bgp2,&bgp3);
     // OBP0 Palette $$FF48 
@@ -1300,6 +1317,9 @@ U0 start()
     Fs->draw_it=NULL;    
     DCFill;
     SettingsPop;
+    CherubExit=TRUE;
+    Kill(snd_task);
+    SndRst;
     Kill(Fs);
 }
 

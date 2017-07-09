@@ -24,6 +24,7 @@ Bool sp0_e=FALSE;
 Bool n_scan=FALSE;
 
 // counters, tile-plane, bg, oam sprites
+I64 sp_trig=FALSE;
 I64 tp_ctr;
 I64 bg_tpos;
 I64 bg_tctr;
@@ -371,7 +372,7 @@ U0 drawFrameBuffer()
 {
 
   // if sprites enabled, draw SP0 to framebuffer
-
+
   GrBlot(fb,0,0,sp0);
   // if (memory[0xFF40]>>1&1){ GrBlot(fb,0,0,sp0); };
   // if bg enabled, draw BG rasterized to framebuffer
@@ -405,9 +406,9 @@ U0 renderSprites()
   s_tile=0;
 
   // Draw Sprites from OAM
-  if (TRUE)
-  //if (memory[0xFF40]>>1&1)
+  if (sp_trig || memory[0xFF40]>>1&1)
   {
+    sp_trig=TRUE;
     oam_ctr=156;
     while(oam_ctr>-4)
     {

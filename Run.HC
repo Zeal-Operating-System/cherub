@@ -1,3 +1,4 @@
+Adam("I64 CherubExit=FALSE;");
 CTask *cherub;
 U8 *RunCmd=CAlloc(1024);
 U8 *RomList=CAlloc(65536);
@@ -18,8 +19,6 @@ while (rom_f)
 
 I64 rom_i = PopUpPickLst(RomList);
 
-"%d\n",rom_i;
-
 I64 incr=0;
 rom_f=roms;
 
@@ -32,10 +31,11 @@ if (rom_i>-1)
   };
   StrPrint(RunCmd,"Cd(\"%s\");\n#include \"Load\";\nRun(\"%s\");\n",DirCur,rom_f->full_name);
   cherub=User(RunCmd);
-  Sleep(300);
+  Sleep(100);
   WinFocus(Fs);
-  Sleep(300);
+  Sleep(100);
   WinFocus(cherub);
+  while (!CherubExit) { Sleep(1); };
 };
 
 DirEntryDel(roms);
@@ -43,4 +43,3 @@ Free(RomList);
 Free(RunCmd);
 rom_f=NULL;
 
-
