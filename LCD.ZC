@@ -3,6 +3,7 @@ CDC *fb=DCNew(160,144);
 CDC *lcd=DCNew(160,144);
 CDC *lcd2=DCNew(160*2,144*2);
 CDC *lcd3=DCNew(160*3,144*3);
+CDC *lcd4=DCNew(160*4,144*4);
 
 CDC *bgr=DCNew(160,144);
 CDC *bg_s=DCNew(256,1);
@@ -58,6 +59,7 @@ U0 FreeLCD()
   DCDel(lcd);
   DCDel(lcd2);
   DCDel(lcd3);
+  DCDel(lcd4);
   DCDel(bgr);
   DCDel(bg_s);
   DCDel(sp0_s);
@@ -98,6 +100,10 @@ U0 DrawIt(CTask *,CDC *dc)
           lcd3->color=GrPeek(lcd,xctr,yctr);
           GrRect(lcd3,xpos,ypos,LCDScale,LCDScale);
         };
+        if(LCDScale==4){
+          lcd4->color=GrPeek(lcd,xctr,yctr);
+          GrRect(lcd4,xpos,ypos,LCDScale,LCDScale);
+        };
         xctr++;
         xpos+=LCDScale;
       };
@@ -109,6 +115,9 @@ U0 DrawIt(CTask *,CDC *dc)
     };
     if(LCDScale==3){
       GrBlot(dc,0,0,lcd3);  
+    };
+    if(LCDScale==4){
+      GrBlot(dc,0,0,lcd4);  
     };
   } else{
     GrBlot(dc,0,0,lcd);

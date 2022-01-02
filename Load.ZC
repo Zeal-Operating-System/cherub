@@ -1,5 +1,5 @@
-StrCpy(Fs->task_name,"");
-StrCpy(Fs->task_title,"");
+StrCopy(Fs->task_name,"");
+StrCopy(Fs->task_title,"");
 // Settings
 #include "Settings";
 
@@ -37,7 +37,7 @@ I64 soundMode=2;
 
 I64 DisplayMsgTicks=0;
 U8 DisplayMsg[32];
-StrCpy(DisplayMsg,"");
+StrCopy(DisplayMsg,"");
 
 U8 StateFile[512];
 
@@ -63,10 +63,32 @@ U0 SetLCDScale()
       Fs->win_top    =0x03; 
       Fs->win_bottom =0x38;
       break;
+    case 4:
+      Fs->win_left   =0x0A; 
+      Fs->win_right  =0x59;
+      Fs->win_top    =0x03; 
+      Fs->win_bottom =0x4A;
     default:
       break;
   };
 }
+
+I64 COLOR1, COLOR2, COLOR3, COLOR4;
+if (gr_palette[BLACK] > gr_palette[WHITE])
+{ // system is using a dark palette
+	COLOR1 = WHITE;
+	COLOR2 = LTGRAY;
+	COLOR3 = DKGRAY;
+	COLOR4 = BLACK;
+}
+else
+{ // system is using a light palette
+	COLOR1 = BLACK;
+	COLOR2 = DKGRAY;
+	COLOR3 = LTGRAY;
+	COLOR4 = WHITE;
+}
+
 
 U0 SetPal(U8 p, I64 *c0, I64 *c1, I64 *c2, I64 *c3)
 {
@@ -76,9 +98,11 @@ U0 SetPal(U8 p, I64 *c0, I64 *c1, I64 *c2, I64 *c3)
   {
     if((p>>((colctr*2)+1))&1)
     {
-      if((p>>((colctr*2)))&1){col[colctr]=0;}else{col[colctr]=8;};
+//      if((p>>((colctr*2)))&1){col[colctr]=0;}else{col[colctr]=8;};
+      if((p>>((colctr*2)))&1){col[colctr]=COLOR1;}else{col[colctr]=COLOR2;};
     } else {
-      if((p>>((colctr*2)))&1){col[colctr]=7;}else{col[colctr]=15;};
+//      if((p>>((colctr*2)))&1){col[colctr]=7;}else{col[colctr]=15;};
+      if((p>>((colctr*2)))&1){col[colctr]=COLOR3;}else{col[colctr]=COLOR4;};
     };
     colctr++;
   };
@@ -535,7 +559,8 @@ U0 clockUpdate()
 {
     //We're tying in the same timer for RTC and frame skipping, since we can and this reduces load.
     if (autoFrameskip || cTIMER) {
-        I64 timeElapsed = (HPET/100) - lastIteration; //Get the numnber of milliseconds since this last executed.
+//        I64 timeElapsed = (HPET/100) - lastIteration; //Get the numnber of milliseconds since this last executed.
+        I64 timeElapsed = counts.jiffies - lastIteration; //Get the numnber of milliseconds since this last executed.
         if (cTIMER && !RTCHALT) {
             //Update the MBC3 RTC:
             RTCSeconds += timeElapsed / 1000;
@@ -569,7 +594,8 @@ U0 clockUpdate()
                 --frameskipAmount;
             }
         }
-        lastIteration = (HPET/100);
+//        lastIteration = (HPET/100);
+        lastIteration = counts.jiffies;
     }
 }
 
@@ -967,9 +993,9 @@ U0 saveState()
     cpustate[18]=FSubtract;
     cpustate[19]=FHalfCarry;
     cpustate[20]=FCarry;
-    MemCpy(statebuf,cpubuf,(21*sizeof(I64)));
-    MemCpy(statebuf+(21*sizeof(I64)),mem,sizeof(memory));
-    MemCpy(statebuf+(21*sizeof(I64))+sizeof(memory),mbc,sizeof(MBCRam));
+    MemCopy(statebuf,cpubuf,(21*sizeof(I64)));
+    MemCopy(statebuf+(21*sizeof(I64)),mem,sizeof(memory));
+    MemCopy(statebuf+(21*sizeof(I64))+sizeof(memory),mbc,sizeof(MBCRam));
     FileWrite(StateFile,statebuf,(2048*1024));
     Free(cpustate);
     Free(statebuf);
@@ -980,36 +1006,36 @@ U0 loadState()
 {
     I64 toBool;
     U8 *buf=FileRead(StateFile);
-    MemCpy(&programCounter,buf+(8*0),8);
-    MemCpy(&stackPointer,buf+(8*1),8);
-    MemCpy(&LCDTicks,buf+(8*2),8);
-    MemCpy(&DIVTicks,buf+(8*3),8);
-    MemCpy(&registerA,buf+(8*4),8);
-    MemCpy(&registerB,buf+(8*5),8);
-    MemCpy(&registerC,buf+(8*6),8);
-    MemCpy(&registerD,buf+(8*7),8);
-    MemCpy(&registerE,buf+(8*8),8);
-    MemCpy(&registersHL,buf+(8*9),8);
-    MemCpy(&currMBCRAMBank,buf+(8*10),8);
-    MemCpy(&currMBCRAMBankPosition,buf+(8*11),8);
-    MemCpy(&ROMBank1offs,buf+(8*12),8);
-    MemCpy(&currentROMBank,buf+(8*13),8);
-    MemCpy(&toBool,buf+(8*14),8);
+    MemCopy(&programCounter,buf+(8*0),8);
+    MemCopy(&stackPointer,buf+(8*1),8);
+    MemCopy(&LCDTicks,buf+(8*2),8);
+    MemCopy(&DIVTicks,buf+(8*3),8);
+    MemCopy(&registerA,buf+(8*4),8);
+    MemCopy(&registerB,buf+(8*5),8);
+    MemCopy(&registerC,buf+(8*6),8);
+    MemCopy(&registerD,buf+(8*7),8);
+    MemCopy(&registerE,buf+(8*8),8);
+    MemCopy(&registersHL,buf+(8*9),8);
+    MemCopy(&currMBCRAMBank,buf+(8*10),8);
+    MemCopy(&currMBCRAMBankPosition,buf+(8*11),8);
+    MemCopy(&ROMBank1offs,buf+(8*12),8);
+    MemCopy(&currentROMBank,buf+(8*13),8);
+    MemCopy(&toBool,buf+(8*14),8);
     MBC1Mode=toBool;
-    MemCpy(&toBool,buf+(8*15),8);
+    MemCopy(&toBool,buf+(8*15),8);
     MBCRAMBanksEnabled=toBool;
-    MemCpy(&toBool,buf+(8*16),8);
+    MemCopy(&toBool,buf+(8*16),8);
     IME=toBool;
-    MemCpy(&toBool,buf+(8*17),8);
+    MemCopy(&toBool,buf+(8*17),8);
     FZero=toBool;
-    MemCpy(&toBool,buf+(8*18),8);
+    MemCopy(&toBool,buf+(8*18),8);
     FSubtract=toBool;
-    MemCpy(&toBool,buf+(8*19),8);
+    MemCopy(&toBool,buf+(8*19),8);
     FHalfCarry=toBool;
-    MemCpy(&toBool,buf+(8*20),8);
+    MemCopy(&toBool,buf+(8*20),8);
     FCarry=toBool;
-    MemCpy(&memory,buf+(21*sizeof(I64)),sizeof(memory));
-    MemCpy(&MBCRam,buf+(21*sizeof(I64))+sizeof(memory),sizeof(MBCRam));
+    MemCopy(&memory,buf+(21*sizeof(I64)),sizeof(memory));
+    MemCopy(&MBCRam,buf+(21*sizeof(I64))+sizeof(memory),sizeof(MBCRam));
     Free(buf);
 }
 
@@ -1085,7 +1111,7 @@ U0 updateCore()
         };
         if (useKeyboard==TRUE)
         {
-          sc=InU8(0x60);
+//          sc=InU8(0x60);
           updateKeyboard;
         };
 
@@ -1119,7 +1145,7 @@ U0 opcodeRun(I64 opcode)
 {
     #include "Opcode";
     //"PC:%04X \n",programCounter;
-    //PressAKey;
+   //PressAKey;
 };
 
 U0 joyPadState(I64 key, I64 state)
@@ -1129,8 +1155,8 @@ U0 joyPadState(I64 key, I64 state)
 
 U0 executeIteration()
 {
-    StrCpy(Fs->task_name,ROM+0x134);
-    StrCpy(Fs->task_title,ROM+0x134);
+    StrCopy(Fs->task_name,ROM+0x134);
+    StrCopy(Fs->task_title,ROM+0x134);
 
     //Iterate the interpreter loop:
     I64 op = 0;
@@ -1232,8 +1258,6 @@ U0 executeIteration()
           joyPadEvent(keyCtr,jp_state[keyCtr]);
         };
 
-        Sleep(0);
-        
         if (gp_data[10]!=0)
         {
           exitApp=1;
@@ -1245,12 +1269,12 @@ U0 executeIteration()
           {
             kLoad=1;
             if (FileFind(StateFile)) {
-              StrCpy(DisplayMsg,"State Loaded");
+              StrCopy(DisplayMsg,"State Loaded");
               DisplayMsgTicks=1;
               initEmulator;
               loadState;
             } else {
-              StrCpy(DisplayMsg,"No State Found");
+              StrCopy(DisplayMsg,"No State Found");
               DisplayMsgTicks=1;
             };          
           };
@@ -1264,7 +1288,7 @@ U0 executeIteration()
         {
           if(!kSave) {
             kSave=1;
-            StrCpy(DisplayMsg,"State Saved");
+            StrCopy(DisplayMsg,"State Saved");
             DisplayMsgTicks=1;
             saveState;
           };
@@ -1286,19 +1310,19 @@ U0 executeIteration()
 
             if (soundMode==0)
             {
-              StrCpy(DisplayMsg,"Snd Ch01");
+              StrCopy(DisplayMsg,"Sound Ch01");
             };
             if (soundMode==1)
             {
-              StrCpy(DisplayMsg,"Snd Ch02");
+              StrCopy(DisplayMsg,"Sound Ch02");
             };
             if (soundMode==2)
             {
-              StrCpy(DisplayMsg,"Snd Auto");
+              StrCopy(DisplayMsg,"Sound Auto");
             };
             if (soundMode==3)
             {
-              StrCpy(DisplayMsg,"Snd Off");
+              StrCopy(DisplayMsg,"Sound Off");
             };
 
             DisplayMsgTicks=1;
@@ -1328,6 +1352,8 @@ U0 executeIteration()
           memory[0xFEED]=128;
           apuToggle=0;
         };
+
+		Yield;
     };
 }
 
@@ -1414,7 +1440,7 @@ U0 start()
     SetPal(memory[0xFF48],&obp00,&obp01,&obp02,&obp03);
     // OBP1 Palette $$FF49 
     SetPal(memory[0xFF49],&obp10,&obp11,&obp12,&obp13);
-    StrCpy(DisplayMsg,"ROM Loaded");
+    StrCopy(DisplayMsg,"ROM Loaded");
     DisplayMsgTicks=1;
     runEmulator; //Start the emulation.
     FreeLCD;
@@ -1424,14 +1450,14 @@ U0 start()
     SettingsPop;
     CherubExit=TRUE;
     Kill(snd_task);
-    SndRst;
+    SoundReset;
     Kill(Fs);
 }
 
 U0 Run(U8 *rom_file)
 {
     ROM=FileRead(rom_file,&ROMSize);
-    StrCpy(StateFile,rom_file);
-    StrCpy(StateFile+StrLen(StateFile)-3,".STA.Z");
+    StrCopy(StateFile,rom_file);
+    StrCopy(StateFile+StrLen(StateFile)-3,".STA");
     start;
 }

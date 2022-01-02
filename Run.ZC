@@ -1,23 +1,24 @@
-Adam("I64 CherubExit=FALSE;");
+Sys("I64 CherubExit=FALSE;");
+Cd(__DIR__);
 CTask *cherub;
 U8 *RunCmd=CAlloc(1024);
 U8 *RomList=CAlloc(65536);
 
 I64 pos=0;
 CDirEntry *rom_f;
-CDirEntry *roms=FilesFind("Roms/*.gb");
+CDirEntry *roms=FilesFind("Roms/*.gb;*.GB");
 
 rom_f=roms;
 while (rom_f)
 {
-  StrCpy(RomList+pos,rom_f->name);
+  StrCopy(RomList+pos,rom_f->name);
   pos += StrLen(rom_f->name) + 1;
   rom_f=rom_f->next;
 };
 
 
 
-I64 rom_i = PopUpPickLst(RomList);
+I64 rom_i = PopUpPickList(RomList);
 
 I64 incr=0;
 rom_f=roms;

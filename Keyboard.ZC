@@ -1,0 +1,199 @@
+I64 last_time = counts.jiffies,
+	sc_s = Char2ScanCode('s'),
+	sc_a = Char2ScanCode('a'),
+	sc_q = Char2ScanCode('q'),
+	sc_1 = Char2ScanCode('1'),
+	sc_2 = Char2ScanCode('2'),
+	sc_3 = Char2ScanCode('3'),
+	sc_4 = Char2ScanCode('4'),
+	sc_5 = Char2ScanCode('5'),
+	sc_7 = Char2ScanCode('7'),
+	sc_r = Char2ScanCode('r'),
+	sc_u = Char2ScanCode('u'),
+	sc_i = Char2ScanCode('i'),
+	sc_o = Char2ScanCode('o'),
+	sc_p = Char2ScanCode('p');
+
+U0 updateKeyboard()
+{
+	I64		i;
+	Bool	lcd = FALSE,
+			is_u_down = Bt(kbd.down_bitmap, sc_u),
+			is_i_down = Bt(kbd.down_bitmap, sc_i),
+			is_o_down = Bt(kbd.down_bitmap, sc_o),
+			is_p_down = Bt(kbd.down_bitmap, sc_p);
+
+	for (i = 0; i < 12; i++)
+		gp_data[i] = 0;
+
+	gp_data[0] = 0x40 * Bt(kbd.down_bitmap, sc_a);				// A
+	gp_data[1] = 0x40 * Bt(kbd.down_bitmap, sc_s);				// B
+	gp_data[2] = 0x40 * Bt(kbd.down_bitmap, SC_SHIFT);			// SELECT
+	gp_data[3] = 0x40 * Bt(kbd.down_bitmap, SC_ENTER);			// START
+	gp_data[4] = 0x40 * Bt(kbd.down_bitmap, SC_CURSOR_UP);		// UP
+	gp_data[5] = 0x40 * Bt(kbd.down_bitmap, SC_CURSOR_DOWN);	// DOWN
+	gp_data[6] = 0x40 * Bt(kbd.down_bitmap, SC_CURSOR_LEFT);	// LEFT
+	gp_data[7] = 0x40 * Bt(kbd.down_bitmap, SC_CURSOR_RIGHT);	// RIGHT
+	gp_data[8] = 0x40 * Bt(kbd.down_bitmap, sc_q);				// 'ToggleSound'
+	gp_data[9] = 0x40 * Bt(kbd.down_bitmap, sc_7);				// 'SaveState'
+	gp_data[10] = 0x40 * Bt(kbd.down_bitmap, SC_ESC);			// Exit
+	gp_data[11] = 0x40 * Bt(kbd.down_bitmap, sc_5);				// 'LoadState'
+
+	if (Bt(kbd.down_bitmap, sc_r))
+	{
+		StrCopy(DisplayMsg, "Reset");
+		DisplayMsgTicks=1;
+		initEmulator;
+	}
+
+	if (is_u_down || is_i_down || is_o_down || is_p_down)
+	{
+		if (counts.jiffies > last_time + 500)
+		{ // make color changing slow enough to see changes
+			if (is_u_down)
+				COLOR1 = ++COLOR1 % 16;
+			if (is_i_down)
+				COLOR2 = ++COLOR2 % 16;
+			if (is_o_down)
+				COLOR3 = ++COLOR3 % 16;
+			if (is_p_down)
+				COLOR4 = ++COLOR4 % 16;
+
+			last_time = counts.jiffies;
+		}
+	}
+	else
+		last_time = 0;
+
+	if (lcd = Bt(kbd.down_bitmap, sc_1))
+		LCDScale = 1;
+	else if (lcd = Bt(kbd.down_bitmap, sc_2))
+		LCDScale = 2;
+	else if (lcd = Bt(kbd.down_bitmap, sc_3))
+		LCDScale = 3;
+	else if (lcd = Bt(kbd.down_bitmap, sc_4))
+		LCDScale = 4;
+
+	if (lcd)
+		SetLCDScale;
+
+/*
+        switch(sc)
+        {
+
+            // Reset (kbd only)
+            case 0x13: // r
+                kReset=0;
+                break;
+            case 0x13 + 0x80:
+                if(!kReset) {
+                  kReset=1;
+                  StrCopy(DisplayMsg,"Reset");
+                  DisplayMsgTicks=1;
+                  initEmulator;
+                };
+                break;           
+
+            // Set Display Size (kbd only)
+            case 0x02 + 0x80: // 1
+                LCDScale=1;
+                SetLCDScale;
+                break;
+            case 0x03 + 0x80: // 2
+                LCDScale=2;
+                SetLCDScale;
+                break;
+            case 0x04 + 0x80: // 3
+                LCDScale=3;
+                SetLCDScale;
+                break;
+
+            // Exit
+            case 0x01: // ESC
+                gp_data[10]=0x40;
+                break;
+            // LoadState
+            case 0x06: // 5
+                gp_data[11]=0x40;
+                break;
+            // SaveState
+            case 0x08: // 7
+                gp_data[9]=0x40;
+                break;
+            // ToggleSound
+            case 0x10: // q
+                gp_data[8]=0x40;
+                break;
+            // Exit(up)
+            case 0x01 + 0x80:
+                gp_data[10]=0x00;
+                break;
+            // LoadState(up)
+            case 0x06 + 0x80:
+                gp_data[11]=0x00;
+                break;
+            // SaveState(up)
+            case 0x08 + 0x80:
+                gp_data[9]=0x00;
+                break;
+            // ToggleSound(up)
+            case 0x10 + 0x80:
+                gp_data[8]=0x00;
+                break;
+
+            case 0x4D: // right
+                gp_data[7]=0x40;
+                break;
+            case 0x4B: // left
+                gp_data[6]=0x40;
+                break;
+            case 0x48: // up
+                gp_data[4]=0x40;
+                break;
+            case 0x50: // down
+                gp_data[5]=0x40;
+                break;
+            case 0x1F: // s
+                gp_data[0]=0x40;
+                break;
+            case 0x1E: // a
+                gp_data[1]=0x40;
+                break;
+            case 0x2A: // left shift
+                gp_data[2]=0x40;
+                break;
+            case 0x1C: // enter
+                gp_data[3]=0x40;
+                break;
+
+            case 0x4D + 0x80:
+                gp_data[7]=0x00;
+                break;
+            case 0x4B + 0x80:
+                gp_data[6]=0x00;
+                break;
+            case 0x48 + 0x80:
+                gp_data[4]=0x00;
+                break;
+            case 0x50 + 0x80:
+                gp_data[5]=0x00;
+                break;
+            case 0x1F + 0x80:
+                gp_data[0]=0x00;
+                break;
+            case 0x1E + 0x80:
+                gp_data[1]=0x00;
+                break;
+            case 0x2A + 0x80:
+                gp_data[2]=0x00;
+                break;
+            case 0x1C + 0x80:
+                gp_data[3]=0x00;
+                break;
+
+            default:
+                break;
+        };
+*/
+};
+

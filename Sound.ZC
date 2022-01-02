@@ -26,7 +26,7 @@ U0 GBSoundTask(U8 *regs)
         {
           freq=131072/(2048-x);
           div=1193180/freq;
-          // I wanted to use Snd(Freq2Ona(freq)); here
+          // I wanted to use Sound(Freq2Ona(freq)); here
           // instead of I/O port writes, but the 
           // conversion isn't right...?
           OutU8(0x43, 0xB6);
@@ -45,8 +45,8 @@ U0 GBSoundTask(U8 *regs)
         restCtrA++;
         if (restCtrA>30000)
         {
-          SndRst;
-          SndRst;
+          SoundReset;
+          SoundReset;
           restCtrA=0;
           //prevB=0;
         };
@@ -81,8 +81,8 @@ U0 GBSoundTask(U8 *regs)
         restCtrB++;
         if (restCtrB>30000)
         {
-          SndRst;
-          SndRst;
+          SoundReset;
+          SoundReset;
           restCtrB=0;
           //prevA=0;
         };
@@ -92,7 +92,7 @@ U0 GBSoundTask(U8 *regs)
 
     if(memory[0xFEED]==128)
     {
-      SndRst;
+      SoundReset;
     };
 
 

@@ -1,7 +1,7 @@
 I64 audioGranularity = 20;
 
 //Auto Frame Skip
-I64 autoFrameskip = TRUE;
+I64 autoFrameskip = FALSE;
 
 I64 frameDelay = 120;
 
@@ -9,9 +9,9 @@ I64 frameDelay = 120;
 I64 soundMode=2;
 
 I64 useKeyboard=TRUE;
-I64 useGamePad=TRUE;
+I64 useGamePad=FALSE;
 
-I64 LCDScale=3;
+I64 LCDScale=1;
 
 //Frameskip Amount (Auto frameskip setting allows the script to change this.)
 I64 frameskipAmount = 0;
@@ -35,7 +35,7 @@ I64 overrideMBC = TRUE;
 I64 overrideMBC1 = TRUE;
 
 //Give priority to GameBoy mode
-I64 priorizeGameBoyMode = TRUE;
+I64 priorizeGameBoyMode = FALSE;
 
 //Sample Rate
 I64 sampleRate = 70000;
