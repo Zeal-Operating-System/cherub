@@ -3,7 +3,8 @@ I64 audioGranularity = 20;
 //Auto Frame Skip
 I64 autoFrameskip = FALSE;
 
-I64 frameDelay = 120;
+I64 iter_per_jiffy = 500; // target # of CPU loops in 1 jiffy
+I64 frameDelay = 0; // gets auto adjusted based on iter_per_jiffy
 
 // Sound modes: 0 (Ch 01), 1 (Ch 02), 2 (Auto), 3 (Off)
 I64 soundMode=2;

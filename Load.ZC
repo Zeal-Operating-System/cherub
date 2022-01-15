@@ -1112,7 +1112,7 @@ U0 updateCore()
         if (useKeyboard==TRUE)
         {
 //          sc=InU8(0x60);
-          updateKeyboard;
+//          updateKeyboard;
         };
 
                 //LCD off takes at least 2 frames.
@@ -1153,11 +1153,10 @@ U0 joyPadState(I64 key, I64 state)
   jp_state[key] = state;
 }
 
-U0 executeIteration()
+I64 cnt = 0, t = counts.jiffies;
+//U0 executeIteration()
+U0 executeIterationTask()
 {
-    StrCopy(Fs->task_name,ROM+0x134);
-    StrCopy(Fs->task_title,ROM+0x134);
-
     //Iterate the interpreter loop:
     I64 op = 0;
     while (exitApp!=1) {
@@ -1353,12 +1352,28 @@ U0 executeIteration()
           apuToggle=0;
         };
 
-		Yield;
+        if (mp_count < 2)
+            Yield;
+        if (counts.jiffies > t)
+        {
+//            StrPrint(DisplayMsg, "%d", cnt);
+//            DisplayMsgTicks=1;
+            if (cnt > iter_per_jiffy) frameDelay++;
+            if (cnt < iter_per_jiffy) frameDelay--;
+            if (frameDelay < 0) frameDelay = 0;
+
+            cnt = 0;
+            t = counts.jiffies;
+        }
+
+        cnt++;
     };
 }
-
+CTask *cpu_task;
 U0 runEmulator()
 {
+    U8 *temp;
+    I64 cpu_core = MinI64(1, mp_count - 1);
     Fs->draw_it=&DrawIt;
     //The preprocessing before the actual iteration loop:
     if ((stopEmulator & 2) == 0) {
@@ -1367,7 +1382,22 @@ U0 runEmulator()
             clockUpdate; //Frame skip and RTC code.
             //If no HALT... Execute normally
             if (!halt) {
-                executeIteration;
+                cpu_task = Spawn(&executeIterationTask,,,cpu_core);
+                temp = MStrPrint("cherub cpu: %s", ROM+0x134);
+                StrCopy(cpu_task->task_name,temp);
+                StrCopy(cpu_task->task_title,temp);
+				Free(temp);
+                StrCopy(Fs->task_name,"cherub");
+                StrCopy(Fs->task_title,"cherub");
+                while (TRUE)
+                {
+                    if (Fs == sys_focus_task)
+                        updateKeyboard;
+                    if (!TaskValidate(cpu_task))
+                        break;
+                    Sleep(1);
+                }
+//                executeIteration;
             //If we bailed out of a halt because the iteration ran down its timing.
             } else {
                 CPUTicks = 1;
@@ -1376,7 +1406,7 @@ U0 runEmulator()
                 runInterrupt;
                 //Timing:
                 updateCore;
-                executeIteration;
+//                executeIteration;
             }
         //We can only get here if there was an internal error, but the loop was restarted.
         } else {
@@ -1433,7 +1463,13 @@ U0 start()
     setupRAMBanks;
     initLCD; // init LCD
     memory[0xFEED]=1;
-    CTask *snd_task=Spawn(&GBSoundTask,&memory,,2);
+    CTask *snd_task = NULL;
+    if (mp_count >= 3)
+    {
+        snd_task = Spawn(&GBSoundTask,&memory,,2);
+        StrCopy(snd_task->task_name,"cherub sound");
+        StrCopy(snd_task->task_title,"cherub sound");
+    }
     // BG Palette $$FF47 
     SetPal(memory[0xFF47],&bgp0,&bgp1,&bgp2,&bgp3);
     // OBP0 Palette $$FF48 
@@ -1450,6 +1486,7 @@ U0 start()
     SettingsPop;
     CherubExit=TRUE;
     Kill(snd_task);
+    Kill(cpu_task);
     SoundReset;
     Kill(Fs);
 }

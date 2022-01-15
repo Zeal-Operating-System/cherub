@@ -30,6 +30,8 @@ if (rom_i>-1)
     rom_f=rom_f->next;
     incr++;
   };
+  StrCopy(Fs->task_name,"cherub launcher");
+  StrCopy(Fs->task_title,"cherub launcher");
   StrPrint(RunCmd,"Cd(\"%s\");\n#include \"Load\";\nRun(\"%s\");\n",DirCur,rom_f->full_name);
   cherub=User(RunCmd);
   Sleep(100);
